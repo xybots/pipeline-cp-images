@@ -1,0 +1,58 @@
+{
+  "variables": {
+    "aws_ssh_username": "{{ env `AWS_SSH_USERNAME` }}",
+    "aws_image_name": "{{ env `AWS_IMAGE_NAME` }}",
+    "aws_source_ami": "{{ env `AWS_SOURCE_AMI` }}",
+    "aws_instance_type": "{{ env `AWS_INTANCE_TYPE` }}",
+    "aws_spot_price": "{{ env `AWS_SPOT_PRICE` }}",
+    "aws_access_key_id": "{{ env `AWS_ACCESS_KEY_ID` }}",
+    "aws_secret_access_key": "{{ env `AWS_SECRET_ACCESS_KEY` }}",
+    "aws_region": "{{ env `AWS_REGION` }}",
+    "aws_ami_regions": "{{ env `AWS_AMI_REGIONS` }}",
+    "kubernetes_version": "{{ env `KUBERNETES_VERSION` }}",
+    "kubernetes_release_tag": "{{ env `KUBERNETES_RELEASE_TAG` }}",
+    "etcd_release_tag": "{{ env `ETCD_RELEASE_TAG` }}",
+    "k8s_dns_release_tag": "{{ env `K8S_DNS_RELEASE_TAG` }}",
+    "helm_release_tag": "{{ env `HELM_RELEASE_TAG` }}",
+    "vault_version": "{{ env `VAULT_VERSION` }}"
+  },
+  "builders": [
+    {
+      "name": "aws-ubuntu-1604-amd64",
+      "type": "amazon-ebs",
+      "region": "{{ user `aws_region` }}",
+      "spot_price": "{{ user `aws_spot_price` }}",
+      "ebs_optimized": true,
+      "ssh_pty": true,
+      "source_ami": "{{ user `aws_source_ami`}}",
+      "instance_type": "{{ user `aws_instance_type` }}",
+      "ssh_username": "{{ user `aws_ssh_username` }}",
+      "tags": {
+        "builder": "packer",
+        "version": "{{user `version`}}"
+      },
+      "ami_groups": "all",
+      "ami_name": "{{ user `aws_image_name`}}",
+      "ami_regions": "{{user `aws_ami_regions`}}"
+    }
+  ],
+  "provisioners": [
+    {
+      "type": "shell",
+      "script": "scripts/bootstrap.sh",
+      "environment_vars": [
+        "AWS_ACCESS_KEY_ID={{ user `aws_access_key_id` }}",
+        "AWS_SECRET_ACCESS_KEY={{ user `aws_secret_access_key` }}",
+        "AWS_REGION={{ user `aws_region` }}",
+        "AWS_DEFAULT_REGION={{ user `aws_region`}}",
+        "KUBERNETES_VERSION={{ user `kubernetes_version`}}",
+        "KUBERNETES_RELEASE_TAG={{ user `kubernetes_release_tag`}}",
+        "ETCD_RELEASE_TAG={{ user `etcd_release_tag`}}",
+        "K8S_DNS_RELEASE_TAG={{ user `k8s_dns_release_tag`}}",
+        "HELM_RELEASE_TAG={{ user `helm_release_tag`}}",
+        "VAULT_VERSION={{ user `vault_version`}}"
+      ],
+      "execute_command": "chmod +x {{ .Path }}; sudo -H {{ .Vars }} {{ .Path }}"
+    }
+  ]
+}
